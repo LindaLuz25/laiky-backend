@@ -44,10 +44,11 @@ jobs:
         run: sam build
 
       - name: Subir artefacto de build
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: sam-build
-          path: .aws-sam/
+          path: .aws-sam
+          include-hidden-files: true
 
   deploy:
     name: Deploy a AWS
@@ -61,10 +62,10 @@ jobs:
         uses: aws-actions/setup-sam@v3
 
       - name: Descargar artefacto de build
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           name: sam-build
-          path: .aws-sam/
+          path: .aws-sam
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
