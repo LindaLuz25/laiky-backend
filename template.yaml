@@ -1,0 +1,320 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Laiky - Backend serverless (Lambda + Express + DynamoDB + S3 + CloudFront +
+  Cognito + SNS). Reemplaza la coordinacion manual por WhatsApp con un
+  catalogo web, pedidos y panel de administracion.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: laiky
+    Description: Prefijo usado para nombrar los recursos
+  AdminEmail:
+    Type: String
+    Description: Correo del administrador que recibira notificaciones de pedidos y alarmas
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Timeout: 10
+    MemorySize: 256
+    Architectures:
+      - x86_64
+    Tracing: Active
+    Environment:
+      Variables:
+        RESTAURANTS_TABLE: !Ref RestaurantsTable
+        PRODUCTS_TABLE: !Ref ProductsTable
+        ORDERS_TABLE: !Ref OrdersTable
+        IMAGES_BUCKET: !Ref ImagesBucket
+        ORDERS_TOPIC_ARN: !Ref OrdersTopic
+
+Resources:
+  # ---------- Cognito (autenticacion del panel admin) ----------
+  AdminUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "${ProjectName}-admin-pool"
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+
+  AdminUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub "${ProjectName}-admin-client"
+      UserPoolId: !Ref AdminUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+
+  # ---------- API (HTTP API) ----------
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - "*"
+          - Authorization
+      Auth:
+        Authorizers:
+          CognitoAdminAuthorizer:
+            JwtConfiguration:
+              issuer: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${AdminUserPool}"
+              audience:
+                - !Ref AdminUserPoolClient
+            IdentitySource: "$request.header.Authorization"
+
+  # ---------- Lambda unica (Express via serverless-http) ----------
+  ExpressFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda.handler
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RestaurantsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProductsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OrdersTable
+        - S3CrudPolicy:
+            BucketName: !Ref ImagesBucket
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt OrdersTopic.TopicName
+      Events:
+        # Rutas publicas: catalogo (restaurantes/productos) y creacion de pedidos
+        PublicProxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /{proxy+}
+            Method: ANY
+        # Rutas de administracion: protegidas con el authorizer de Cognito
+        AdminProxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /admin/{proxy+}
+            Method: ANY
+            Auth:
+              Authorizer: CognitoAdminAuthorizer
+
+  # ---------- Alarma de errores (CloudWatch) ----------
+  ExpressFunctionErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${ProjectName}-lambda-errors"
+      AlarmDescription: Se dispara si la Lambda tiene errores en un periodo de 5 minutos
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ExpressFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmsTopic
+
+  # ---------- DynamoDB ----------
+  RestaurantsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${ProjectName}-restaurants"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  OrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${ProjectName}-orders"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  ProductsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${ProjectName}-products"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: restaurantId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: restaurantId-index
+          KeySchema:
+            - AttributeName: restaurantId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  # ---------- SNS: notificaciones ----------
+  OrdersTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${ProjectName}-orders-topic"
+
+  OrdersTopicSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref OrdersTopic
+      Protocol: email
+      Endpoint: !Ref AdminEmail
+
+  AlarmsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${ProjectName}-alarms-topic"
+
+  AlarmsTopicSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AlarmsTopic
+      Protocol: email
+      Endpoint: !Ref AdminEmail
+
+  # ---------- S3: bucket de imagenes (privado) ----------
+  ImagesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ProjectName}-images-${AWS::AccountId}"
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: ["*"]
+            AllowedMethods: [GET, PUT, POST]
+            AllowedHeaders: ["*"]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # ---------- S3: bucket del sitio estatico (privado, solo CloudFront accede) ----------
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ProjectName}-website-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${WebsiteBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
+  # ---------- CloudFront ----------
+  CloudFrontOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${ProjectName}-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: WebsiteOrigin
+            DomainName: !GetAtt WebsiteBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt CloudFrontOriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: WebsiteOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # AWS Managed-CachingOptimized
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+Outputs:
+  ApiUrl:
+    Description: URL base de la API (publica; agrega /admin/... para rutas de administracion)
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+
+  AdminUserPoolId:
+    Description: User Pool de Cognito (usalo para crear el usuario admin)
+    Value: !Ref AdminUserPool
+
+  AdminUserPoolClientId:
+    Description: Client Id de Cognito (usalo desde el frontend para el login)
+    Value: !Ref AdminUserPoolClient
+
+  RestaurantsTableName:
+    Value: !Ref RestaurantsTable
+
+  ProductsTableName:
+    Value: !Ref ProductsTable
+
+  OrdersTableName:
+    Value: !Ref OrdersTable
+
+  ImagesBucketName:
+    Value: !Ref ImagesBucket
+
+  WebsiteBucketName:
+    Value: !Ref WebsiteBucket
+
+  CloudFrontDomain:
+    Description: Dominio de CloudFront para el sitio estatico
+    Value: !GetAtt CloudFrontDistribution.DomainName
