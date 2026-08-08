@@ -16,6 +16,7 @@
     "@aws-sdk/client-sns": "^3.1101.0",
     "@aws-sdk/lib-dynamodb": "^3.1101.0",
     "@aws-sdk/s3-request-presigner": "^3.1101.0",
+    "cors": "^2.8.6",
     "express": "^5.2.1",
     "serverless-http": "^4.0.0"
   }

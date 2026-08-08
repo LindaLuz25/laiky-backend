@@ -101,20 +101,64 @@ Resources:
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt OrdersTopic.TopicName
       Events:
-        # Rutas publicas: catalogo (restaurantes/productos) y creacion de pedidos
-        PublicProxy:
+        # Rutas publicas: catalogo (restaurantes/productos) y creacion de pedidos.
+        # Se listan los metodos reales (sin OPTIONS) para que el preflight de CORS
+        # lo responda automaticamente API Gateway, sin pasar por el authorizer.
+        PublicProxyGet:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
             Path: /{proxy+}
-            Method: ANY
+            Method: GET
+        PublicProxyPost:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /{proxy+}
+            Method: POST
+        PublicProxyPut:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /{proxy+}
+            Method: PUT
+        PublicProxyDelete:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /{proxy+}
+            Method: DELETE
         # Rutas de administracion: protegidas con el authorizer de Cognito
-        AdminProxy:
+        AdminProxyGet:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
             Path: /admin/{proxy+}
-            Method: ANY
+            Method: GET
+            Auth:
+              Authorizer: CognitoAdminAuthorizer
+        AdminProxyPost:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /admin/{proxy+}
+            Method: POST
+            Auth:
+              Authorizer: CognitoAdminAuthorizer
+        AdminProxyPut:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /admin/{proxy+}
+            Method: PUT
+            Auth:
+              Authorizer: CognitoAdminAuthorizer
+        AdminProxyDelete:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /admin/{proxy+}
+            Method: DELETE
             Auth:
               Authorizer: CognitoAdminAuthorizer
 
