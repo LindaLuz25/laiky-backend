@@ -275,6 +275,10 @@ function openProductModal(id) {
       <input type="number" step="0.01" id="f-price" value="${product ? product.price : ""}" />
     </div>
     <div class="form-group">
+      <label>Descripcion (opcional)</label>
+      <textarea id="f-description" rows="3" placeholder="Ej: Incluye tallarin, chijaukay, siumai y gaseosa de 1.5L">${product ? escapeHtml(product.description || "") : ""}</textarea>
+    </div>
+    <div class="form-group">
       <label>Foto del producto</label>
       ${
         product && product.imageUrl
@@ -296,6 +300,7 @@ function openProductModal(id) {
     const restaurantId = document.getElementById("f-restaurant").value;
     const name = document.getElementById("f-name").value.trim();
     const price = parseFloat(document.getElementById("f-price").value);
+    const description = document.getElementById("f-description").value.trim() || null;
     if (!restaurantId || !name || isNaN(price)) return alert("Completa restaurante, nombre y precio");
 
     let imageUrl = product ? product.imageUrl || null : null;
@@ -312,12 +317,12 @@ function openProductModal(id) {
       const available = document.getElementById("f-available").checked;
       await apiFetch(`/admin/products/${product.id}`, {
         method: "PUT",
-        body: JSON.stringify({ name, price, imageUrl, available }),
+        body: JSON.stringify({ name, price, imageUrl, description, available }),
       });
     } else {
       await apiFetch("/admin/products", {
         method: "POST",
-        body: JSON.stringify({ restaurantId, name, price, imageUrl }),
+        body: JSON.stringify({ restaurantId, name, price, imageUrl, description }),
       });
     }
     await loadProducts();

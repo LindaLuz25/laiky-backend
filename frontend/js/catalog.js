@@ -106,6 +106,7 @@ function renderProducts() {
         ${image}
         <div class="card-body">
           <h3>${escapeHtml(p.name)}</h3>
+          ${p.description ? `<p>${escapeHtml(p.description)}</p>` : ""}
           <p class="price">S/ ${Number(p.price).toFixed(2)}</p>
           <div class="card-footer">
             <span></span>

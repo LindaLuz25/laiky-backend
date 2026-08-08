@@ -19,7 +19,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { restaurantId, name, price, imageUrl } = req.body;
+  const { restaurantId, name, price, imageUrl, description } = req.body;
   if (!restaurantId || !name || price === undefined) {
     return res.status(400).json({ message: "Campos requeridos: restaurantId, name, price" });
   }
@@ -29,6 +29,7 @@ router.post("/", async (req, res) => {
     restaurantId,
     name,
     price,
+    description: description || null,
     imageUrl: imageUrl || null,
     available: true,
     createdAt: new Date().toISOString(),
@@ -39,18 +40,20 @@ router.post("/", async (req, res) => {
 });
 
 router.put("/:id", async (req, res) => {
-  const { name, price, imageUrl, available } = req.body;
+  const { name, price, imageUrl, description, available } = req.body;
 
   const result = await docClient.send(
     new UpdateCommand({
       TableName: TABLE_NAME,
       Key: { id: req.params.id },
-      UpdateExpression: "SET #name = :name, price = :price, imageUrl = :imageUrl, available = :available",
+      UpdateExpression:
+        "SET #name = :name, price = :price, imageUrl = :imageUrl, description = :description, available = :available",
       ExpressionAttributeNames: { "#name": "name" },
       ExpressionAttributeValues: {
         ":name": name,
         ":price": price,
         ":imageUrl": imageUrl ?? null,
+        ":description": description ?? null,
         ":available": available ?? true,
       },
       ReturnValues: "ALL_NEW",
