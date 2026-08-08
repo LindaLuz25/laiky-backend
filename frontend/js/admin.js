@@ -225,6 +225,11 @@ function renderProducts() {
     .map(
       (p) => `
       <tr>
+        <td>${
+          p.imageUrl
+            ? `<img src="/${p.imageUrl}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:6px;" />`
+            : `<div style="width:44px;height:44px;border-radius:6px;background:#e5e7eb;"></div>`
+        }</td>
         <td>${escapeHtml(p.name)}</td>
         <td>${escapeHtml(restaurantName(p.restaurantId))}</td>
         <td>S/ ${Number(p.price).toFixed(2)}</td>
@@ -270,8 +275,14 @@ function openProductModal(id) {
       <input type="number" step="0.01" id="f-price" value="${product ? product.price : ""}" />
     </div>
     <div class="form-group">
-      <label>URL de imagen (opcional)</label>
-      <input type="text" id="f-image" value="${product ? escapeAttr(product.imageUrl || "") : ""}" />
+      <label>Foto del producto</label>
+      ${
+        product && product.imageUrl
+          ? `<img src="/${product.imageUrl}" alt="" style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;margin-bottom:8px;" />`
+          : ""
+      }
+      <input type="file" id="f-image-file" accept="image/*" />
+      <div id="f-image-status" style="font-size:12px;color:#6b7280;margin-top:4px;"></div>
     </div>
     ${
       product
@@ -285,8 +296,17 @@ function openProductModal(id) {
     const restaurantId = document.getElementById("f-restaurant").value;
     const name = document.getElementById("f-name").value.trim();
     const price = parseFloat(document.getElementById("f-price").value);
-    const imageUrl = document.getElementById("f-image").value.trim() || null;
     if (!restaurantId || !name || isNaN(price)) return alert("Completa restaurante, nombre y precio");
+
+    let imageUrl = product ? product.imageUrl || null : null;
+    const fileInput = document.getElementById("f-image-file");
+    const file = fileInput.files[0];
+    if (file) {
+      const statusEl = document.getElementById("f-image-status");
+      statusEl.textContent = "Subiendo imagen...";
+      imageUrl = await uploadProductImage(file);
+      statusEl.textContent = "";
+    }
 
     if (product) {
       const available = document.getElementById("f-available").checked;
@@ -302,6 +322,23 @@ function openProductModal(id) {
     }
     await loadProducts();
   });
+}
+
+async function uploadProductImage(file) {
+  const params = new URLSearchParams({
+    fileName: file.name,
+    contentType: file.type || "application/octet-stream",
+  });
+  const { uploadUrl, key } = await apiFetch(`/admin/images/upload-url?${params}`);
+
+  const putRes = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+  });
+  if (!putRes.ok) throw new Error("No se pudo subir la imagen a S3");
+
+  return key;
 }
 
 async function deleteProduct(id) {

@@ -85,25 +85,45 @@ async function openRestaurant(id) {
   }
 }
 
+function quantityInCart(productId) {
+  const item = state.cart.find((i) => i.productId === productId);
+  return item ? item.quantity : 0;
+}
+
 function renderProducts() {
   if (state.products.length === 0) {
     els.productsGrid.innerHTML = `<p class="empty-state">Este restaurante no tiene productos disponibles.</p>`;
     return;
   }
   els.productsGrid.innerHTML = state.products
-    .map(
-      (p) => `
+    .map((p) => {
+      const qty = quantityInCart(p.id);
+      const image = p.imageUrl
+        ? `<img class="card-image" src="/${p.imageUrl}" alt="${escapeAttr(p.name)}" />`
+        : `<div class="card-image placeholder">🍽️</div>`;
+      return `
       <div class="card" data-id="${p.id}">
-        <h3>${escapeHtml(p.name)}</h3>
-        <p class="price">S/ ${Number(p.price).toFixed(2)}</p>
+        ${image}
+        <div class="card-body">
+          <h3>${escapeHtml(p.name)}</h3>
+          <p class="price">S/ ${Number(p.price).toFixed(2)}</p>
+          <div class="card-footer">
+            <span></span>
+            <button class="add-btn" data-add="${p.id}">
+              Agregar
+              ${qty > 0 ? `<span class="qty-badge">${qty}</span>` : ""}
+            </button>
+          </div>
+        </div>
       </div>
-    `
-    )
+    `;
+    })
     .join("");
 
-  els.productsGrid.querySelectorAll(".card").forEach((card) => {
-    card.addEventListener("click", () => {
-      const product = state.products.find((p) => p.id === card.dataset.id);
+  els.productsGrid.querySelectorAll("[data-add]").forEach((btn) => {
+    btn.addEventListener("click", (evt) => {
+      evt.stopPropagation();
+      const product = state.products.find((p) => p.id === btn.dataset.add);
       addToCart(product);
     });
   });
@@ -122,6 +142,7 @@ function addToCart(product) {
     });
   }
   renderCart();
+  renderProducts();
   openCart();
 }
 
@@ -133,6 +154,7 @@ function changeQuantity(productId, delta) {
     state.cart = state.cart.filter((i) => i.productId !== productId);
   }
   renderCart();
+  renderProducts();
 }
 
 function cartTotal() {
@@ -214,6 +236,7 @@ async function submitOrder(evt) {
     els.checkoutAlert.innerHTML = `<div class="alert success">Pedido enviado. Nos comunicaremos contigo pronto.</div>`;
     state.cart = [];
     renderCart();
+    renderProducts();
     els.checkoutForm.reset();
     setTimeout(() => {
       closeCheckout();
@@ -228,6 +251,10 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return (str ?? "").replace(/"/g, "&quot;");
 }
 
 els.backBtn.addEventListener("click", () => {

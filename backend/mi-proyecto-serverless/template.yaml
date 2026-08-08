@@ -268,6 +268,21 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
 
+  ImagesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ImagesBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${ImagesBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
   # ---------- S3: bucket del sitio estatico (privado, solo CloudFront accede) ----------
   WebsiteBucket:
     Type: AWS::S3::Bucket
@@ -304,6 +319,15 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
+  ImagesOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${ProjectName}-images-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -316,12 +340,24 @@ Resources:
             OriginAccessControlId: !GetAtt CloudFrontOriginAccessControl.Id
             S3OriginConfig:
               OriginAccessIdentity: ""
+          - Id: ImagesOrigin
+            DomainName: !GetAtt ImagesBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt ImagesOriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
         DefaultCacheBehavior:
           TargetOriginId: WebsiteOrigin
           ViewerProtocolPolicy: redirect-to-https
           AllowedMethods: [GET, HEAD]
           CachedMethods: [GET, HEAD]
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # AWS Managed-CachingOptimized
+        CacheBehaviors:
+          - PathPattern: "products/*"
+            TargetOriginId: ImagesOrigin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # AWS Managed-CachingOptimized
         CustomErrorResponses:
           - ErrorCode: 404
             ResponseCode: 200
