@@ -73,7 +73,6 @@ Resources:
           - OPTIONS
         AllowHeaders:
           - "*"
-          - Authorization
       Auth:
         Authorizers:
           CognitoAdminAuthorizer:
