@@ -1,6 +1,6 @@
-node_modules/
-.aws-sam/
-samconfig.toml
+backend/mi-proyecto-serverless/node_modules/
+backend/mi-proyecto-serverless/.aws-sam/
+backend/mi-proyecto-serverless/samconfig.toml
+backend/mi-proyecto-serverless/curl
 *.log
 .env
-curl

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laiky - Panel Admin</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Laiky</h1>
+      <div class="subtitle">Panel de administracion</div>
+    </div>
+    <div>
+      <a href="index.html" style="color: white; font-size: 13px; margin-right: 16px;">Ver sitio publico</a>
+      <button id="logout-btn" class="secondary" style="display: none;">Cerrar sesion</button>
+    </div>
+  </header>
+
+  <!-- Login -->
+  <div id="login-screen" style="display: flex;">
+    <div class="login-box">
+      <h2>Iniciar sesion</h2>
+      <div id="login-alert"></div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-username">Correo</label>
+          <input type="email" id="login-username" required />
+        </div>
+        <div class="form-group">
+          <label for="login-password">Contrasena</label>
+          <input type="password" id="login-password" required />
+        </div>
+        <button type="submit" class="primary" style="width: 100%;">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin -->
+  <main id="admin-screen" style="display: none;">
+    <div class="admin-layout">
+      <nav class="sidebar">
+        <button class="tab active" data-tab="restaurants">🍽️ Restaurantes</button>
+        <button class="tab" data-tab="products">📦 Productos</button>
+        <button class="tab" data-tab="orders">🧾 Pedidos</button>
+      </nav>
+
+      <div class="admin-content">
+        <section id="panel-restaurants">
+          <div class="toolbar">
+            <div class="section-title" style="margin:0;">Restaurantes</div>
+            <button id="new-restaurant-btn" class="primary">+ Nuevo restaurante</button>
+          </div>
+          <table id="restaurants-table">
+            <thead>
+              <tr><th>Nombre</th><th>Direccion</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </section>
+
+        <section id="panel-products" style="display: none;">
+          <div class="toolbar">
+            <div class="section-title" style="margin:0;">Productos</div>
+            <button id="new-product-btn" class="primary">+ Nuevo producto</button>
+          </div>
+          <table id="products-table">
+            <thead>
+              <tr><th>Nombre</th><th>Restaurante</th><th>Precio</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </section>
+
+        <section id="panel-orders" style="display: none;">
+          <div class="section-title">Pedidos</div>
+          <table id="orders-table">
+            <thead>
+              <tr><th>Cliente</th><th>Restaurante</th><th>Items</th><th>Direccion</th><th>Estado</th><th>Cambiar estado</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal generico -->
+  <div id="modal-backdrop" class="modal-backdrop">
+    <div class="modal">
+      <h3 id="modal-title"></h3>
+      <div id="modal-body"></div>
+      <div class="modal-actions">
+        <button id="modal-cancel-btn" class="secondary">Cancelar</button>
+        <button id="modal-save-btn" class="primary">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

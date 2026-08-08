@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laiky - Delivery Carabayllo</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Laiky</h1>
+      <div class="subtitle">Delivery local en Carabayllo</div>
+    </div>
+    <a href="admin.html" style="color: white; font-size: 13px;">Panel admin</a>
+  </header>
+
+  <main>
+    <section id="restaurants-section">
+      <div class="section-title">Restaurantes y comercios</div>
+      <div id="restaurants-grid" class="grid"></div>
+    </section>
+
+    <section id="products-section" style="display: none;">
+      <button id="back-btn" class="back-link">&larr; Volver a restaurantes</button>
+      <div class="section-title" id="selected-restaurant-name"></div>
+      <div id="products-grid" class="grid"></div>
+    </section>
+  </main>
+
+  <!-- Carrito flotante -->
+  <button id="cart-fab" class="cart-fab">
+    🛒 Carrito (<span id="cart-count">0</span>)
+  </button>
+
+  <div id="overlay" class="overlay"></div>
+
+  <aside id="cart-drawer" class="cart-drawer">
+    <div class="cart-header">
+      <strong>Tu pedido</strong>
+      <button id="close-cart-btn" class="link">Cerrar</button>
+    </div>
+    <div id="cart-items" class="cart-items"></div>
+    <div class="cart-footer">
+      <div class="total">
+        <span>Total</span>
+        <span id="cart-total">S/ 0.00</span>
+      </div>
+      <button id="checkout-btn" class="primary" style="width: 100%;">Hacer pedido</button>
+    </div>
+  </aside>
+
+  <!-- Modal de checkout -->
+  <div id="checkout-modal" class="modal-backdrop">
+    <div class="modal">
+      <h3>Datos de entrega</h3>
+      <div id="checkout-alert"></div>
+      <form id="checkout-form">
+        <div class="form-group">
+          <label for="customerName">Nombre completo</label>
+          <input type="text" id="customerName" name="customerName" required />
+        </div>
+        <div class="form-group">
+          <label for="customerPhone">Telefono</label>
+          <input type="tel" id="customerPhone" name="customerPhone" required />
+        </div>
+        <div class="form-group">
+          <label for="address">Direccion de entrega</label>
+          <textarea id="address" name="address" rows="2" required></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="cancel-checkout-btn" class="secondary">Cancelar</button>
+          <button type="submit" class="primary">Confirmar pedido</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/catalog.js"></script>
+</body>
+</html>

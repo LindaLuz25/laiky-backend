@@ -1,0 +1,78 @@
+/* Tema propio del panel admin: distinto al sitio publico (Laiky naranja) */
+:root {
+  --admin-bg: #0f172a;
+  --admin-bg-light: #1e293b;
+  --admin-accent: #2563eb;
+  --admin-accent-dark: #1d4ed8;
+  --admin-text-muted: #94a3b8;
+}
+
+body {
+  background: #f1f5f9;
+}
+
+header.topbar {
+  background: var(--admin-bg);
+}
+
+.login-box {
+  margin-top: 100px;
+}
+
+.login-box button.primary {
+  background: var(--admin-accent);
+}
+.login-box button.primary:hover {
+  background: var(--admin-accent-dark);
+}
+
+.admin-layout {
+  display: flex;
+  min-height: calc(100vh - 64px);
+  max-width: none;
+  padding: 0;
+}
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--admin-bg);
+  padding: 20px 0;
+}
+
+.sidebar .tab {
+  display: block;
+  width: 100%;
+  text-align: left;
+  color: var(--admin-text-muted);
+  border-left: 3px solid transparent;
+  border-bottom: none;
+  border-radius: 0;
+  padding: 12px 20px;
+}
+
+.sidebar .tab.active {
+  color: white;
+  background: var(--admin-bg-light);
+  border-left-color: var(--admin-accent);
+}
+
+.admin-content {
+  flex: 1;
+  padding: 24px 32px;
+}
+
+.admin-content button.primary {
+  background: var(--admin-accent);
+}
+.admin-content button.primary:hover {
+  background: var(--admin-accent-dark);
+}
+
+.badge.PENDIENTE,
+.badge.CONFIRMADO,
+.badge.EN_CAMINO,
+.badge.ENTREGADO,
+.badge.CANCELADO {
+  font-weight: 700;
+}
