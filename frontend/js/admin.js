@@ -317,7 +317,7 @@ function openProductModal(id) {
       const available = document.getElementById("f-available").checked;
       await apiFetch(`/admin/products/${product.id}`, {
         method: "PUT",
-        body: JSON.stringify({ name, price, imageUrl, description, available }),
+        body: JSON.stringify({ restaurantId, name, price, imageUrl, description, available }),
       });
     } else {
       await apiFetch("/admin/products", {

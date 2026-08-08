@@ -40,14 +40,14 @@ router.post("/", async (req, res) => {
 });
 
 router.put("/:id", async (req, res) => {
-  const { name, price, imageUrl, description, available } = req.body;
+  const { restaurantId, name, price, imageUrl, description, available } = req.body;
 
   const result = await docClient.send(
     new UpdateCommand({
       TableName: TABLE_NAME,
       Key: { id: req.params.id },
       UpdateExpression:
-        "SET #name = :name, price = :price, imageUrl = :imageUrl, description = :description, available = :available",
+        "SET #name = :name, price = :price, imageUrl = :imageUrl, description = :description, available = :available, restaurantId = :restaurantId",
       ExpressionAttributeNames: { "#name": "name" },
       ExpressionAttributeValues: {
         ":name": name,
@@ -55,6 +55,7 @@ router.put("/:id", async (req, res) => {
         ":imageUrl": imageUrl ?? null,
         ":description": description ?? null,
         ":available": available ?? true,
+        ":restaurantId": restaurantId,
       },
       ReturnValues: "ALL_NEW",
     })
