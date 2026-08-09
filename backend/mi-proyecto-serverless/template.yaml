@@ -384,3 +384,7 @@ Outputs:
   CloudFrontDomain:
     Description: Dominio de CloudFront para el sitio estatico
     Value: !GetAtt CloudFrontDistribution.DomainName
+
+  CloudFrontDistributionId:
+    Description: ID de la distribucion de CloudFront (usalo para invalidar cache tras subir el frontend)
+    Value: !Ref CloudFrontDistribution
