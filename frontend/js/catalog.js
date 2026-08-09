@@ -4,10 +4,13 @@ const state = {
   restaurants: [],
   selectedRestaurant: null,
   products: [],
-  cart: [], // { productId, name, price, quantity }
+  cart: [],
+  newArrivals: [],
 };
 
 const els = {
+  newArrivalsSection: document.getElementById("new-arrivals-section"),
+  newArrivalsCarousel: document.getElementById("new-arrivals-carousel"),
   restaurantsGrid: document.getElementById("restaurants-grid"),
   productsSection: document.getElementById("products-section"),
   productsGrid: document.getElementById("products-grid"),
@@ -48,20 +51,82 @@ async function loadRestaurants() {
   }
 }
 
+async function loadNewArrivals() {
+  try {
+    const allProducts = await fetchJSON(`${API_BASE}/products`);
+    const withImage = allProducts
+      .filter((p) => p.imageUrl)
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+      .slice(0, 8);
+
+    if (withImage.length === 0) return;
+
+    state.newArrivals = withImage;
+    els.newArrivalsSection.style.display = "block";
+    els.newArrivalsCarousel.innerHTML = withImage
+      .map(
+        (p) => `
+        <div class="card" data-id="${p.id}">
+          <img class="card-image" src="/${p.imageUrl}" alt="${escapeAttr(p.name)}" />
+          <div class="card-body">
+            <h3>${escapeHtml(p.name)}</h3>
+            <p class="price">S/ ${Number(p.price).toFixed(2)}</p>
+            <div class="card-footer">
+              <button class="add-btn" data-add-new="${p.id}">Agregar</button>
+            </div>
+          </div>
+        </div>
+      `
+      )
+      .join("");
+
+    els.newArrivalsCarousel.querySelectorAll("[data-add-new]").forEach((btn) => {
+      btn.addEventListener("click", (evt) => {
+        evt.stopPropagation();
+        const product = state.newArrivals.find((p) => p.id === btn.dataset.addNew);
+        addFromNewArrivals(product);
+      });
+    });
+  } catch {
+  }
+}
+
+function addFromNewArrivals(product) {
+  const restaurant = state.restaurants.find((r) => r.id === product.restaurantId);
+  if (!restaurant) return;
+
+  if (state.cart.length > 0 && state.selectedRestaurant && state.selectedRestaurant.id !== restaurant.id) {
+    const confirmSwitch = confirm(
+      `Tu carrito tiene productos de "${state.selectedRestaurant.name}". ¿Vaciarlo para agregar productos de "${restaurant.name}"?`
+    );
+    if (!confirmSwitch) return;
+    state.cart = [];
+  }
+
+  state.selectedRestaurant = restaurant;
+  addToCart(product);
+}
+
 function renderRestaurants() {
   if (state.restaurants.length === 0) {
     els.restaurantsGrid.innerHTML = `<p class="empty-state">Todavia no hay restaurantes disponibles.</p>`;
     return;
   }
+  const icons = ["🍗", "🍜", "🍕", "🌮", "🍔", "💊", "🛒", "🍰"];
+
   els.restaurantsGrid.innerHTML = state.restaurants
-    .map(
-      (r) => `
+    .map((r, idx) => {
+      const icon = icons[idx % icons.length];
+      return `
       <div class="card" data-id="${r.id}">
-        <h3>${escapeHtml(r.name)}</h3>
-        <p>${escapeHtml(r.address || "")}</p>
+        <div class="restaurant-icon">${icon}</div>
+        <div class="card-body">
+          <h3>${escapeHtml(r.name)}</h3>
+          <p>${escapeHtml(r.address || "")}</p>
+        </div>
       </div>
-    `
-    )
+    `;
+    })
     .join("");
 
   els.restaurantsGrid.querySelectorAll(".card").forEach((card) => {
@@ -71,6 +136,16 @@ function renderRestaurants() {
 
 async function openRestaurant(id) {
   const restaurant = state.restaurants.find((r) => r.id === id);
+
+  if (state.cart.length > 0 && state.selectedRestaurant && state.selectedRestaurant.id !== id) {
+    const confirmSwitch = confirm(
+      `Tu carrito tiene productos de "${state.selectedRestaurant.name}". ¿Vaciarlo para ver "${restaurant.name}"?`
+    );
+    if (!confirmSwitch) return;
+    state.cart = [];
+    renderCart();
+  }
+
   state.selectedRestaurant = restaurant;
   els.selectedRestaurantName.textContent = restaurant.name;
   els.restaurantsSection.style.display = "none";
@@ -273,4 +348,5 @@ els.cancelCheckoutBtn.addEventListener("click", closeCheckout);
 els.checkoutForm.addEventListener("submit", submitOrder);
 
 loadRestaurants();
+loadNewArrivals();
 renderCart();

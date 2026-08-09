@@ -6,7 +6,6 @@ const router = express.Router();
 const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE_NAME = process.env.RESTAURANTS_TABLE;
 
-// GET /restaurants -> solo restaurantes activos (catalogo publico)
 router.get("/", async (req, res) => {
   const result = await docClient.send(
     new ScanCommand({
@@ -18,7 +17,6 @@ router.get("/", async (req, res) => {
   res.json(result.Items || []);
 });
 
-// GET /restaurants/:id
 router.get("/:id", async (req, res) => {
   const result = await docClient.send(
     new GetCommand({ TableName: TABLE_NAME, Key: { id: req.params.id } })

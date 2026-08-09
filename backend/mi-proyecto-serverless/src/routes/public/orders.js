@@ -11,7 +11,6 @@ const sns = new SNSClient({});
 const ORDERS_TABLE = process.env.ORDERS_TABLE;
 const ORDERS_TOPIC_ARN = process.env.ORDERS_TOPIC_ARN;
 
-// POST /orders -> el cliente crea un pedido desde la web
 router.post("/", async (req, res) => {
   const { restaurantId, customerName, customerPhone, address, items } = req.body;
 
@@ -34,7 +33,6 @@ router.post("/", async (req, res) => {
 
   await docClient.send(new PutCommand({ TableName: ORDERS_TABLE, Item: order }));
 
-  // Notifica al administrador (reemplaza el "estar pendiente del WhatsApp")
   if (ORDERS_TOPIC_ARN) {
     const resumen = order.items.map((i) => `${i.quantity}x ${i.name}`).join(", ");
     await sns.send(

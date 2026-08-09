@@ -6,7 +6,6 @@ const router = express.Router();
 const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE_NAME = process.env.PRODUCTS_TABLE;
 
-// GET /products?restaurantId=xxx -> si viene restaurantId, usa el GSI; si no, trae todos los disponibles
 router.get("/", async (req, res) => {
   const { restaurantId } = req.query;
 
@@ -33,7 +32,6 @@ router.get("/", async (req, res) => {
   res.json(result.Items || []);
 });
 
-// GET /products/:id
 router.get("/:id", async (req, res) => {
   const result = await docClient.send(
     new GetCommand({ TableName: TABLE_NAME, Key: { id: req.params.id } })

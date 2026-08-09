@@ -14,12 +14,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ---------- Rutas publicas (sin autenticacion) ----------
 app.use("/restaurants", publicRestaurants);
 app.use("/products", publicProducts);
 app.use("/orders", publicOrders);
 
-// ---------- Rutas de administracion (protegidas por Cognito via API Gateway) ----------
 const adminRouter = express.Router();
 adminRouter.use("/restaurants", adminRestaurants);
 adminRouter.use("/products", adminProducts);

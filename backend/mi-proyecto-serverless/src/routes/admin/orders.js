@@ -8,7 +8,6 @@ const TABLE_NAME = process.env.ORDERS_TABLE;
 
 const ESTADOS_VALIDOS = ["PENDIENTE", "CONFIRMADO", "EN_CAMINO", "ENTREGADO", "CANCELADO"];
 
-// GET /admin/orders -> todos los pedidos (mas nuevos primero se ordenan en el frontend)
 router.get("/", async (req, res) => {
   const result = await docClient.send(new ScanCommand({ TableName: TABLE_NAME }));
   res.json(result.Items || []);
@@ -20,7 +19,6 @@ router.get("/:id", async (req, res) => {
   res.json(result.Item);
 });
 
-// PUT /admin/orders/:id/status -> actualizar el estado del pedido
 router.put("/:id/status", async (req, res) => {
   const { status } = req.body;
   if (!ESTADOS_VALIDOS.includes(status)) {

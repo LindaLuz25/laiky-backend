@@ -31,7 +31,6 @@ Globals:
         ORDERS_TOPIC_ARN: !Ref OrdersTopic
 
 Resources:
-  # ---------- Cognito (autenticacion del panel admin) ----------
   AdminUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
@@ -58,7 +57,6 @@ Resources:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
 
-  # ---------- API (HTTP API) ----------
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -82,7 +80,6 @@ Resources:
                 - !Ref AdminUserPoolClient
             IdentitySource: "$request.header.Authorization"
 
-  # ---------- Lambda unica (Express via serverless-http) ----------
   ExpressFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -100,9 +97,6 @@ Resources:
         - SNSPublishMessagePolicy:
             TopicName: !GetAtt OrdersTopic.TopicName
       Events:
-        # Rutas publicas: catalogo (restaurantes/productos) y creacion de pedidos.
-        # Se listan los metodos reales (sin OPTIONS) para que el preflight de CORS
-        # lo responda automaticamente API Gateway, sin pasar por el authorizer.
         PublicProxyGet:
           Type: HttpApi
           Properties:
@@ -127,7 +121,6 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /{proxy+}
             Method: DELETE
-        # Rutas de administracion: protegidas con el authorizer de Cognito
         AdminProxyGet:
           Type: HttpApi
           Properties:
@@ -161,7 +154,6 @@ Resources:
             Auth:
               Authorizer: CognitoAdminAuthorizer
 
-  # ---------- Alarma de errores (CloudWatch) ----------
   ExpressFunctionErrorAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -181,7 +173,6 @@ Resources:
       AlarmActions:
         - !Ref AlarmsTopic
 
-  # ---------- DynamoDB ----------
   RestaurantsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -227,7 +218,6 @@ Resources:
           Projection:
             ProjectionType: ALL
 
-  # ---------- SNS: notificaciones ----------
   OrdersTopic:
     Type: AWS::SNS::Topic
     Properties:
@@ -252,7 +242,6 @@ Resources:
       Protocol: email
       Endpoint: !Ref AdminEmail
 
-  # ---------- S3: bucket de imagenes (privado) ----------
   ImagesBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -283,7 +272,6 @@ Resources:
               StringEquals:
                 AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
 
-  # ---------- S3: bucket del sitio estatico (privado, solo CloudFront accede) ----------
   WebsiteBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -309,7 +297,6 @@ Resources:
               StringEquals:
                 AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
 
-  # ---------- CloudFront ----------
   CloudFrontOriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
     Properties:
@@ -350,14 +337,14 @@ Resources:
           ViewerProtocolPolicy: redirect-to-https
           AllowedMethods: [GET, HEAD]
           CachedMethods: [GET, HEAD]
-          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # AWS Managed-CachingOptimized
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
         CacheBehaviors:
           - PathPattern: "products/*"
             TargetOriginId: ImagesOrigin
             ViewerProtocolPolicy: redirect-to-https
             AllowedMethods: [GET, HEAD]
             CachedMethods: [GET, HEAD]
-            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # AWS Managed-CachingOptimized
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
         CustomErrorResponses:
           - ErrorCode: 404
             ResponseCode: 200

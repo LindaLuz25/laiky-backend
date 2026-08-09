@@ -4,17 +4,33 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Laiky - Delivery Carabayllo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
   <header class="topbar">
-    <div>
-      <h1>Laiky</h1>
-      <div class="subtitle">Delivery local en Carabayllo</div>
+    <div class="brand">
+      <span class="brand-icon">🛵</span>
+      <div>
+        <h1>Laiky</h1>
+        <div class="subtitle">Delivery local en Carabayllo</div>
+      </div>
     </div>
   </header>
 
+  <div class="hero">
+    <h2>Pide a tus restaurantes favoritos de Carabayllo</h2>
+    <p>Elige un restaurante, arma tu pedido y coordinamos la entrega por ti.</p>
+  </div>
+
   <main>
+    <section id="new-arrivals-section" style="display: none;">
+      <div class="section-title">🆕 Nuevos ingresos</div>
+      <div id="new-arrivals-carousel" class="carousel"></div>
+    </section>
+
     <section id="restaurants-section">
       <div class="section-title">Restaurantes y comercios</div>
       <div id="restaurants-grid" class="grid"></div>
@@ -27,7 +43,6 @@
     </section>
   </main>
 
-  <!-- Carrito flotante -->
   <button id="cart-fab" class="cart-fab">
     🛒 Carrito (<span id="cart-count">0</span>)
   </button>
@@ -49,7 +64,6 @@
     </div>
   </aside>
 
-  <!-- Modal de checkout -->
   <div id="checkout-modal" class="modal-backdrop">
     <div class="modal">
       <h3>Datos de entrega</h3>

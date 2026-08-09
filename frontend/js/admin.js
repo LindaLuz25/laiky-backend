@@ -33,8 +33,6 @@ const els = {
   modalCancelBtn: document.getElementById("modal-cancel-btn"),
 };
 
-// ---------- Auth ----------
-
 function isLoggedIn() {
   if (!state.token) return false;
   try {
@@ -93,8 +91,6 @@ function showAdmin() {
   loadAll();
 }
 
-// ---------- API helper ----------
-
 async function apiFetch(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
@@ -116,8 +112,6 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
-// ---------- Data loading ----------
-
 async function loadAll() {
   await Promise.all([loadRestaurants(), loadProducts(), loadOrders()]);
 }
@@ -125,7 +119,7 @@ async function loadAll() {
 async function loadRestaurants() {
   state.restaurants = await apiFetch("/admin/restaurants");
   renderRestaurants();
-  renderProducts(); // por si cambia el nombre de restaurante referenciado
+  renderProducts();
 }
 
 async function loadProducts() {
@@ -138,8 +132,6 @@ async function loadOrders() {
   state.orders.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
   renderOrders();
 }
-
-// ---------- Render: Restaurants ----------
 
 function renderRestaurants() {
   els.restaurantsTableBody.innerHTML = state.restaurants
@@ -212,8 +204,6 @@ async function deleteRestaurant(id) {
   await apiFetch(`/admin/restaurants/${id}`, { method: "DELETE" });
   await loadRestaurants();
 }
-
-// ---------- Render: Products ----------
 
 function restaurantName(id) {
   const r = state.restaurants.find((r) => r.id === id);
@@ -352,8 +342,6 @@ async function deleteProduct(id) {
   await loadProducts();
 }
 
-// ---------- Render: Orders ----------
-
 const ESTADOS = ["PENDIENTE", "CONFIRMADO", "EN_CAMINO", "ENTREGADO", "CANCELADO"];
 
 function renderOrders() {
@@ -393,8 +381,6 @@ function renderOrders() {
   });
 }
 
-// ---------- Modal helper ----------
-
 let modalSaveHandler = null;
 
 function openModal(onSave) {
@@ -418,8 +404,6 @@ els.modalSaveBtn.addEventListener("click", async () => {
 });
 els.modalCancelBtn.addEventListener("click", closeModal);
 
-// ---------- Tabs ----------
-
 els.tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
     state.tab = tab.dataset.tab;
@@ -430,8 +414,6 @@ els.tabs.forEach((tab) => {
   });
 });
 
-// ---------- Utils ----------
-
 function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str ?? "";
@@ -441,8 +423,6 @@ function escapeHtml(str) {
 function escapeAttr(str) {
   return (str ?? "").replace(/"/g, "&quot;");
 }
-
-// ---------- Wire up ----------
 
 els.loginForm.addEventListener("submit", async (evt) => {
   evt.preventDefault();

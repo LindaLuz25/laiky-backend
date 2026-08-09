@@ -1,13 +1,15 @@
 :root {
   --color-primary: #15803d;
   --color-primary-dark: #166534;
+  --color-primary-light: #dcfce7;
   --color-bg: #f7faf7;
   --color-card: #ffffff;
   --color-text: #1f2937;
   --color-text-muted: #6b7280;
   --color-border: #e5e7eb;
-  --radius: 10px;
+  --radius: 14px;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 25px rgba(21, 128, 61, 0.12), 0 4px 10px rgba(0, 0, 0, 0.04);
 }
 
 * {
@@ -16,13 +18,17 @@
 
 body {
   margin: 0;
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
 }
 
+h1, h2, h3, .section-title, .card h3 {
+  font-family: "Poppins", "Segoe UI", system-ui, sans-serif;
+}
+
 header.topbar {
-  background: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   color: white;
   padding: 16px 24px;
   display: flex;
@@ -34,14 +40,43 @@ header.topbar {
   box-shadow: var(--shadow);
 }
 
+header.topbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+header.topbar .brand-icon {
+  font-size: 28px;
+}
+
 header.topbar h1 {
   margin: 0;
   font-size: 22px;
+  letter-spacing: 0.3px;
 }
 
 header.topbar .subtitle {
   font-size: 13px;
   opacity: 0.9;
+}
+
+.hero {
+  background: linear-gradient(135deg, var(--color-primary-light), #ffffff);
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.hero h2 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  color: var(--color-primary-dark);
+}
+
+.hero p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
 }
 
 main {
@@ -62,6 +97,28 @@ main {
   gap: 16px;
 }
 
+.carousel {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x proximity;
+}
+
+.carousel .card {
+  flex: 0 0 200px;
+  scroll-snap-align: start;
+}
+
+.carousel::-webkit-scrollbar {
+  height: 6px;
+}
+
+.carousel::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
 .card {
   background: var(--color-card);
   border: 1px solid var(--color-border);
@@ -69,16 +126,17 @@ main {
   overflow: hidden;
   box-shadow: var(--shadow);
   cursor: pointer;
-  transition: transform 0.1s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
 }
 
 .card-image {
   width: 100%;
-  height: 130px;
+  height: 140px;
   object-fit: cover;
   display: block;
   background: linear-gradient(135deg, #dcfce7, #bbf7d0);
@@ -88,7 +146,17 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 40px;
+}
+
+.restaurant-icon {
+  width: 100%;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  background: linear-gradient(135deg, var(--color-primary-light), #ffffff);
 }
 
 .card-body {
@@ -101,30 +169,34 @@ main {
 }
 
 .card p {
-  margin: 0;
+  margin: 0 0 4px;
   color: var(--color-text-muted);
   font-size: 13px;
+  line-height: 1.4;
 }
 
 .card .price {
   margin-top: 8px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-primary-dark);
+  font-size: 15px;
 }
 
 .card-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-top: 10px;
 }
 
 .add-btn {
   background: var(--color-primary);
   color: white;
-  padding: 6px 14px;
+  padding: 8px 16px;
   font-size: 13px;
   position: relative;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(21, 128, 61, 0.3);
 }
 
 .add-btn:hover {
@@ -145,6 +217,7 @@ main {
   align-items: center;
   justify-content: center;
   padding: 0 4px;
+  box-shadow: 0 0 0 2px white;
 }
 
 button {
@@ -186,7 +259,6 @@ button.link {
   font-weight: 600;
 }
 
-/* Carrito flotante */
 .cart-fab {
   position: fixed;
   bottom: 24px;
@@ -195,9 +267,15 @@ button.link {
   color: white;
   border-radius: 999px;
   padding: 14px 22px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
   font-weight: 600;
   z-index: 30;
+  transition: transform 0.15s ease;
+}
+
+.cart-fab:hover {
+  transform: translateY(-2px) scale(1.03);
+  background: var(--color-primary-dark);
 }
 
 .cart-drawer {
@@ -267,7 +345,6 @@ button.link {
   display: block;
 }
 
-/* Formulario checkout */
 .form-group {
   margin-bottom: 12px;
 }
@@ -312,7 +389,6 @@ button.link {
   color: #991b1b;
 }
 
-/* Admin */
 .tabs {
   display: flex;
   gap: 8px;

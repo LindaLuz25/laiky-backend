@@ -7,7 +7,6 @@ const router = express.Router();
 const s3 = new S3Client({});
 const BUCKET_NAME = process.env.IMAGES_BUCKET;
 
-// GET /admin/images/upload-url?fileName=foto.jpg&contentType=image/jpeg
 router.get("/upload-url", async (req, res) => {
   const { fileName = `${randomUUID()}.jpg`, contentType = "application/octet-stream" } = req.query;
   const key = `products/${randomUUID()}-${fileName}`;

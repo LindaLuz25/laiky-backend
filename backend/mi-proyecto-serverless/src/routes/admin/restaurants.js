@@ -7,7 +7,6 @@ const router = express.Router();
 const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE_NAME = process.env.RESTAURANTS_TABLE;
 
-// GET /admin/restaurants -> todos, incluidos inactivos
 router.get("/", async (req, res) => {
   const result = await docClient.send(new ScanCommand({ TableName: TABLE_NAME }));
   res.json(result.Items || []);
