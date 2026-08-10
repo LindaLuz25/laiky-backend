@@ -9,12 +9,16 @@ const TABLE_NAME = process.env.RESTAURANTS_TABLE;
 
 router.get("/", async (req, res) => {
   const result = await docClient.send(new ScanCommand({ TableName: TABLE_NAME }));
+  console.log(`Restaurantes encontrados (admin): ${result.Items.length}`);
   res.json(result.Items || []);
 });
 
 router.get("/:id", async (req, res) => {
   const result = await docClient.send(new GetCommand({ TableName: TABLE_NAME, Key: { id: req.params.id } }));
-  if (!result.Item) return res.status(404).json({ message: "Restaurante no encontrado" });
+  if (!result.Item) {
+    console.log(`Restaurante no encontrado: ${req.params.id}`);
+    return res.status(404).json({ message: "Restaurante no encontrado" });
+  }
   res.json(result.Item);
 });
 
@@ -31,6 +35,7 @@ router.post("/", async (req, res) => {
   };
 
   await docClient.send(new PutCommand({ TableName: TABLE_NAME, Item: restaurant }));
+  console.log(`Restaurante creado exitosamente: ${restaurant.id}`);
   res.status(201).json(restaurant);
 });
 
@@ -51,11 +56,13 @@ router.put("/:id", async (req, res) => {
       ReturnValues: "ALL_NEW",
     })
   );
+  console.log(`Restaurante actualizado exitosamente: ${req.params.id}`);
   res.json(result.Attributes);
 });
 
 router.delete("/:id", async (req, res) => {
   await docClient.send(new DeleteCommand({ TableName: TABLE_NAME, Key: { id: req.params.id } }));
+  console.log(`Restaurante eliminado exitosamente: ${req.params.id}`);
   res.status(204).send();
 });
 

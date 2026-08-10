@@ -12,6 +12,7 @@ router.get("/upload-url", async (req, res) => {
   const key = `products/${randomUUID()}-${fileName}`;
   const command = new PutObjectCommand({ Bucket: BUCKET_NAME, Key: key, ContentType: contentType });
   const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
+  console.log(`URL prefirmada generada exitosamente para key=${key}`);
   res.json({ uploadUrl, key, expiresIn: 300 });
 });
 

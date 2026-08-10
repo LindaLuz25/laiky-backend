@@ -14,6 +14,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use((req, res, next) => {
+  console.log(`Evento recibido: ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 app.use("/restaurants", publicRestaurants);
 app.use("/products", publicProducts);
 app.use("/orders", publicOrders);

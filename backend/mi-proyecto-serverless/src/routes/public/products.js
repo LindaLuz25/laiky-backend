@@ -19,6 +19,7 @@ router.get("/", async (req, res) => {
         ExpressionAttributeValues: { ":rid": restaurantId, ":available": true },
       })
     );
+    console.log(`Productos encontrados para restaurantId=${restaurantId}: ${result.Items.length}`);
     return res.json(result.Items || []);
   }
 
@@ -29,6 +30,7 @@ router.get("/", async (req, res) => {
       ExpressionAttributeValues: { ":available": true },
     })
   );
+  console.log(`Productos disponibles encontrados: ${result.Items.length}`);
   res.json(result.Items || []);
 });
 
@@ -37,8 +39,10 @@ router.get("/:id", async (req, res) => {
     new GetCommand({ TableName: TABLE_NAME, Key: { id: req.params.id } })
   );
   if (!result.Item || !result.Item.available) {
+    console.log(`Producto no encontrado: ${req.params.id}`);
     return res.status(404).json({ message: "Producto no encontrado" });
   }
+  console.log(`Producto encontrado: ${result.Item.id}`);
   res.json(result.Item);
 });
 

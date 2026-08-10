@@ -10,18 +10,23 @@ const ESTADOS_VALIDOS = ["PENDIENTE", "CONFIRMADO", "EN_CAMINO", "ENTREGADO", "C
 
 router.get("/", async (req, res) => {
   const result = await docClient.send(new ScanCommand({ TableName: TABLE_NAME }));
+  console.log(`Pedidos encontrados (admin): ${result.Items.length}`);
   res.json(result.Items || []);
 });
 
 router.get("/:id", async (req, res) => {
   const result = await docClient.send(new GetCommand({ TableName: TABLE_NAME, Key: { id: req.params.id } }));
-  if (!result.Item) return res.status(404).json({ message: "Pedido no encontrado" });
+  if (!result.Item) {
+    console.log(`Pedido no encontrado: ${req.params.id}`);
+    return res.status(404).json({ message: "Pedido no encontrado" });
+  }
   res.json(result.Item);
 });
 
 router.put("/:id/status", async (req, res) => {
   const { status } = req.body;
   if (!ESTADOS_VALIDOS.includes(status)) {
+    console.log(`Cambio de estado rechazado para pedido ${req.params.id}: status invalido (${status})`);
     return res.status(400).json({ message: `status debe ser uno de: ${ESTADOS_VALIDOS.join(", ")}` });
   }
 
@@ -35,6 +40,7 @@ router.put("/:id/status", async (req, res) => {
       ReturnValues: "ALL_NEW",
     })
   );
+  console.log(`Estado del pedido ${req.params.id} actualizado exitosamente a ${status}`);
   res.json(result.Attributes);
 });
 

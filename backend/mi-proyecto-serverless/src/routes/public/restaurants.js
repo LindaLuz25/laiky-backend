@@ -14,6 +14,7 @@ router.get("/", async (req, res) => {
       ExpressionAttributeValues: { ":active": true },
     })
   );
+  console.log(`Restaurantes activos encontrados: ${result.Items.length}`);
   res.json(result.Items || []);
 });
 
@@ -22,8 +23,10 @@ router.get("/:id", async (req, res) => {
     new GetCommand({ TableName: TABLE_NAME, Key: { id: req.params.id } })
   );
   if (!result.Item || !result.Item.active) {
+    console.log(`Restaurante no encontrado: ${req.params.id}`);
     return res.status(404).json({ message: "Restaurante no encontrado" });
   }
+  console.log(`Restaurante encontrado: ${result.Item.id}`);
   res.json(result.Item);
 });
 

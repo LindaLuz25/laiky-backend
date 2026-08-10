@@ -13,8 +13,10 @@ const ORDERS_TOPIC_ARN = process.env.ORDERS_TOPIC_ARN;
 
 router.post("/", async (req, res) => {
   const { restaurantId, customerName, customerPhone, address, items } = req.body;
+  console.log(`Nuevo pedido recibido de ${customerName} para restaurantId=${restaurantId}, ${Array.isArray(items) ? items.length : 0} items`);
 
   if (!restaurantId || !customerName || !customerPhone || !address || !Array.isArray(items) || items.length === 0) {
+    console.log("Pedido rechazado: faltan campos requeridos");
     return res.status(400).json({
       message: "Faltan campos: restaurantId, customerName, customerPhone, address, items[]",
     });
@@ -32,6 +34,7 @@ router.post("/", async (req, res) => {
   };
 
   await docClient.send(new PutCommand({ TableName: ORDERS_TABLE, Item: order }));
+  console.log(`Pedido creado exitosamente: ${order.id}`);
 
   if (ORDERS_TOPIC_ARN) {
     const resumen = order.items.map((i) => `${i.quantity}x ${i.name}`).join(", ");
@@ -42,6 +45,7 @@ router.post("/", async (req, res) => {
         Message: `Pedido ${order.id}\nCliente: ${customerName} (${customerPhone})\nDireccion: ${address}\nProductos: ${resumen}`,
       })
     );
+    console.log(`Notificacion de pedido ${order.id} publicada en SNS`);
   }
 
   res.status(201).json(order);

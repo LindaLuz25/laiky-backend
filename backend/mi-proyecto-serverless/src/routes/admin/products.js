@@ -9,12 +9,16 @@ const TABLE_NAME = process.env.PRODUCTS_TABLE;
 
 router.get("/", async (req, res) => {
   const result = await docClient.send(new ScanCommand({ TableName: TABLE_NAME }));
+  console.log(`Productos encontrados (admin): ${result.Items.length}`);
   res.json(result.Items || []);
 });
 
 router.get("/:id", async (req, res) => {
   const result = await docClient.send(new GetCommand({ TableName: TABLE_NAME, Key: { id: req.params.id } }));
-  if (!result.Item) return res.status(404).json({ message: "Producto no encontrado" });
+  if (!result.Item) {
+    console.log(`Producto no encontrado: ${req.params.id}`);
+    return res.status(404).json({ message: "Producto no encontrado" });
+  }
   res.json(result.Item);
 });
 
@@ -36,6 +40,7 @@ router.post("/", async (req, res) => {
   };
 
   await docClient.send(new PutCommand({ TableName: TABLE_NAME, Item: product }));
+  console.log(`Producto creado exitosamente: ${product.id}`);
   res.status(201).json(product);
 });
 
@@ -60,11 +65,13 @@ router.put("/:id", async (req, res) => {
       ReturnValues: "ALL_NEW",
     })
   );
+  console.log(`Producto actualizado exitosamente: ${req.params.id}`);
   res.json(result.Attributes);
 });
 
 router.delete("/:id", async (req, res) => {
   await docClient.send(new DeleteCommand({ TableName: TABLE_NAME, Key: { id: req.params.id } }));
+  console.log(`Producto eliminado exitosamente: ${req.params.id}`);
   res.status(204).send();
 });
 
